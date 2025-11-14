@@ -154,4 +154,195 @@ User.leads = relationship("Lead", back_populates="user")
 User.calls = relationship("Call", back_populates="user")
 User.groups = relationship("Group", back_populates="user")
 User.group_calls = relationship("GroupCall", back_populates="user")
-User.system_status = relationship("SystemStatus", back_populates="user") 
+User.system_status = relationship("SystemStatus", back_populates="user")
+
+# Business Agent Platform Models
+class BusinessProfile(Base):
+    """Business profile model for comprehensive business understanding"""
+    __tablename__ = "business_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    business_name = Column(String(255), nullable=False)
+    industry = Column(String(100), nullable=False)
+    business_size = Column(String(50))  # small, medium, large, enterprise
+    location = Column(String(255))
+    website = Column(String(500))
+    phone = Column(String(20))
+    business_email = Column(String(255))
+    services_offered = Column(Text)  # JSON array of services
+    target_audience = Column(Text)  # Description of target customers
+    unique_value_proposition = Column(Text)
+    business_hours = Column(String(255))
+    competitive_advantages = Column(Text)  # JSON array of advantages
+    business_goals = Column(Text)  # JSON array of goals
+    pain_points_solved = Column(Text)  # JSON array of pain points addressed
+    customer_base_size = Column(Integer)
+    annual_revenue = Column(String(100))  # Range or actual
+    years_in_business = Column(Integer)
+    number_of_employees = Column(Integer)
+    business_model = Column(String(100))  # B2B, B2C, B2B2C, etc.
+    primary_markets = Column(Text)  # JSON array of markets/regions
+    technology_stack = Column(Text)  # Current technology used
+    social_media_presence = Column(Text)  # JSON array of platforms
+    marketing_channels = Column(Text)  # JSON array of channels
+    customer_service_approach = Column(Text)
+    sales_process = Column(Text)
+    compliance_requirements = Column(Text)  # Industry-specific compliance
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="business_profile")
+    agents = relationship("AgentConfiguration", back_populates="business_profile")
+    question_sessions = relationship("QuestionSession", back_populates="business_profile")
+
+class AgentConfiguration(Base):
+    """Agent configuration model for AI assistants"""
+    __tablename__ = "agent_configurations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    business_profile_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=False)
+    agent_name = Column(String(255), nullable=False)
+    agent_type = Column(String(100), nullable=False)  # secretary, sales, support, general
+    personality_traits = Column(Text)  # JSON array of personality traits
+    voice_style = Column(String(100))  # professional, friendly, energetic, calm
+    communication_style = Column(String(100))  # formal, casual, mixed
+    industry_knowledge = Column(Text)  # JSON array of industry-specific knowledge
+    capabilities = Column(Text)  # JSON array of agent capabilities
+    languages = Column(Text)  # JSON array of supported languages
+    working_hours = Column(String(255))
+    escalation_rules = Column(Text)  # JSON array of escalation conditions
+    integration_settings = Column(Text)  # JSON object for third-party integrations
+    custom_responses = Column(Text)  # JSON object for custom response templates
+    learning_enabled = Column(Boolean, default=True)
+    emotional_intelligence = Column(Boolean, default=True)
+    voice_profile_id = Column(Integer, ForeignKey("voice_profiles.id"), nullable=True)
+    is_active = Column(Boolean, default=True)
+    deployment_status = Column(String(50), default="draft")  # draft, testing, deployed, paused
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="agents")
+    business_profile = relationship("BusinessProfile", back_populates="agents")
+    voice_profile = relationship("VoiceProfile", back_populates="agents")
+    conversations = relationship("AgentConversation", back_populates="agent")
+
+class QuestionSession(Base):
+    """Question session model for business profiling conversations"""
+    __tablename__ = "question_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    business_profile_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=False)
+    session_status = Column(String(50), default="in_progress")  # in_progress, completed, abandoned
+    current_question_category = Column(String(100))
+    questions_asked = Column(Text)  # JSON array of asked questions
+    answers_received = Column(Text)  # JSON object of answers
+    confidence_score = Column(Float, default=0.0)  # AI confidence in business understanding
+    next_questions = Column(Text)  # JSON array of recommended next questions
+    session_metadata = Column(Text)  # JSON object for session metadata
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User")
+    business_profile = relationship("BusinessProfile", back_populates="question_sessions")
+
+class VoiceProfile(Base):
+    """Voice profile model for agent voice configurations"""
+    __tablename__ = "voice_profiles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    profile_name = Column(String(255), nullable=False)
+    voice_type = Column(String(100), nullable=False)  # cloned, celebrity, custom, standard
+    gender = Column(String(20))  # male, female, neutral
+    age_range = Column(String(50))  # young, adult, mature, senior
+    accent = Column(String(100))
+    pitch = Column(Float, default=1.0)  # Voice pitch multiplier
+    speed = Column(Float, default=1.0)  # Speech speed multiplier
+    volume = Column(Float, default=1.0)  # Volume multiplier
+    emotion_range = Column(Text)  # JSON array of supported emotions
+    language = Column(String(10), default="en-US")
+    sample_audio_url = Column(String(500))
+    voice_model_path = Column(String(500))
+    is_celebrity = Column(Boolean, default=False)
+    celebrity_name = Column(String(255))
+    license_info = Column(Text)  # JSON object for licensing details
+    usage_count = Column(Integer, default=0)
+    quality_score = Column(Float, default=0.0)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    user = relationship("User", back_populates="voice_profiles")
+    agents = relationship("AgentConfiguration", back_populates="voice_profile")
+
+class AgentConversation(Base):
+    """Agent conversation model for tracking AI agent interactions"""
+    __tablename__ = "agent_conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    agent_id = Column(Integer, ForeignKey("agent_configurations.id"), nullable=False)
+    customer_id = Column(String(255))  # Customer identifier (phone, email, etc.)
+    conversation_type = Column(String(100))  # phone, chat, email, in-person
+    start_time = Column(DateTime(timezone=True), server_default=func.now())
+    end_time = Column(DateTime(timezone=True))
+    duration_seconds = Column(Integer)
+    sentiment_analysis = Column(Text)  # JSON object of sentiment data
+    customer_satisfaction_score = Column(Integer)  # 1-5 rating
+    resolution_status = Column(String(50))  # resolved, escalated, follow_up_needed
+    topics_discussed = Column(Text)  # JSON array of topics
+    emotional_journey = Column(Text)  # JSON array of emotional states
+    learning_insights = Column(Text)  # JSON object of AI learning data
+    conversation_summary = Column(Text)
+    action_items = Column(Text)  # JSON array of action items
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    agent = relationship("AgentConfiguration", back_populates="conversations")
+    messages = relationship("ConversationMessage", back_populates="agent_conversation")
+
+class CompetitiveAnalysis(Base):
+    """Competitive analysis model for market intelligence"""
+    __tablename__ = "competitive_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    business_profile_id = Column(Integer, ForeignKey("business_profiles.id"), nullable=False)
+    competitor_name = Column(String(255), nullable=False)
+    competitor_website = Column(String(500))
+    competitor_size = Column(String(100))
+    competitor_revenue = Column(String(100))
+    market_position = Column(String(100))
+    strengths = Column(Text)  # JSON array of identified strengths
+    weaknesses = Column(Text)  # JSON array of identified weaknesses
+    opportunities = Column(Text)  # JSON array of opportunities
+    threats = Column(Text)  # JSON array of threats
+    feature_comparison = Column(Text)  # JSON object comparing features
+    pricing_analysis = Column(Text)  # JSON object of pricing comparison
+    customer_reviews_analysis = Column(Text)  # JSON object of review analysis
+    market_share_estimate = Column(Float)
+    growth_trend = Column(String(50))  # growing, stable, declining
+    technological_advantages = Column(Text)  # JSON array of tech advantages
+    gap_analysis = Column(Text)  # JSON array of feature gaps
+    recommended_actions = Column(Text)  # JSON array of recommendations
+    last_updated = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    user = relationship("User")
+    business_profile = relationship("BusinessProfile")
+
+# Add new relationships to User model
+User.business_profile = relationship("BusinessProfile", back_populates="user", uselist=False)
+User.agents = relationship("AgentConfiguration", back_populates="user")
+User.voice_profiles = relationship("VoiceProfile", back_populates="user")
+
+# Update ConversationMessage to support agent conversations
+ConversationMessage.agent_conversation_id = Column(Integer, ForeignKey("agent_conversations.id"), nullable=True)
+ConversationMessage.agent_conversation = relationship("AgentConversation", back_populates="messages") 
